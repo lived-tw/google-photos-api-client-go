@@ -18,3 +18,5 @@ require (
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	google.golang.org/api v0.19.0
 )
+
+replace github.com/gphotosuploader/googlemirror v0.3.5 => github.com/lived-tw/googlemirror v0.3.6-0.20200309075813-541031747d36

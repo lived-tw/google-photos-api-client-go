@@ -9,7 +9,7 @@ import (
 )
 
 // AddMediaItem returns MediaItem created after uploading `filename` and adding it to `albumID`.
-func (c *Client) AddMediaItem(ctx context.Context, filename, albumID string) (*photoslibrary.MediaItem, error) {
+func (c *Client) AddMediaItem(ctx context.Context, filename, desc, albumID string) (*photoslibrary.MediaItem, error) {
 	c.log.Debugf("Initiating upload and media item creation: file=%s", filename)
 
 	uploadToken, err := c.uploader.UploadFromFile(ctx, filename)
@@ -19,7 +19,7 @@ func (c *Client) AddMediaItem(ctx context.Context, filename, albumID string) (*p
 
 	c.log.Debugf("File has been uploaded: file=%s", filename)
 
-	mediaItem, err := c.createMediaItemFromUploadToken(ctx, uploadToken, albumID, filename)
+	mediaItem, err := c.createMediaItemFromUploadToken(ctx, uploadToken, albumID, filename, desc)
 	if err != nil {
 		c.log.Errorf("Failed to create media item: file=%s, err=%s", filename, err)
 		return nil, fmt.Errorf("error while trying to create this media item, err=%s", err)
@@ -29,13 +29,13 @@ func (c *Client) AddMediaItem(ctx context.Context, filename, albumID string) (*p
 	return mediaItem, nil
 }
 
-func (c *Client) createMediaItemFromUploadToken(ctx context.Context, uploadToken, albumID, filename string) (*photoslibrary.MediaItem, error) {
+func (c *Client) createMediaItemFromUploadToken(ctx context.Context, uploadToken, albumID, filename, desc string) (*photoslibrary.MediaItem, error) {
 	req := photoslibrary.BatchCreateMediaItemsRequest{
 		AlbumId: albumID,
 		NewMediaItems: []*photoslibrary.NewMediaItem{
 			{
-				Description:     filename,
-				SimpleMediaItem: &photoslibrary.SimpleMediaItem{UploadToken: uploadToken},
+				Description:     desc,
+				SimpleMediaItem: &photoslibrary.SimpleMediaItem{UploadToken: uploadToken, FileName: filename},
 			},
 		},
 	}
@@ -62,7 +62,7 @@ func (c *Client) createMediaItemFromUploadToken(ctx context.Context, uploadToken
 
 // UploadFile actually uploads the media and activates it on google photos
 // DEPRECATED: Use c.AddMediaItem(...) instead
-func (c *Client) UploadFile(filename string, pAlbumID ...string) (*photoslibrary.MediaItem, error) {
+func (c *Client) UploadFile(filename, desc string, pAlbumID ...string) (*photoslibrary.MediaItem, error) {
 	ctx := context.TODO()
 
 	// validate parameters
@@ -74,16 +74,16 @@ func (c *Client) UploadFile(filename string, pAlbumID ...string) (*photoslibrary
 		albumID = pAlbumID[0]
 	}
 
-	return c.AddMediaItem(ctx, filename, albumID)
+	return c.AddMediaItem(ctx, filename, desc, albumID)
 }
 
 // UploadFileResumable return a MediaItem created after uploding the specified file
 // DEPRECATED: Use c.UploadFile(...) instead.
-func (c *Client) UploadFileResumable(filePath string, uploadURL *string, pAlbumID ...string) (*photoslibrary.MediaItem, error) {
+func (c *Client) UploadFileResumable(filePath, desc string, uploadURL *string, pAlbumID ...string) (*photoslibrary.MediaItem, error) {
 	if len(pAlbumID) > 1 {
-		return c.UploadFile(filePath, pAlbumID[0])
+		return c.UploadFile(filePath, desc, pAlbumID[0])
 	}
-	return c.UploadFile(filePath)
+	return c.UploadFile(filePath, desc)
 }
 
 // codebeat:enable
